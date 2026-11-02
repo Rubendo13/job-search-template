@@ -1,0 +1,316 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job Search Control Panel</title>
+<style>
+  :root {
+    --ground: #f6f7f5;
+    --panel: #ffffff;
+    --panel-2: #eef1ef;
+    --ink: #171a1d;
+    --ink-2: #4a5257;
+    --ink-3: #767f85;
+    --rule: #d8ddd9;
+    --accent: #1c5d80;
+    --accent-soft: #e3edf2;
+    --live: #2f7d4f;
+    --live-soft: #e2efe7;
+    --wait: #a56a15;
+    --wait-soft: #f6ecd9;
+    --gap: #9c3838;
+    --gap-soft: #f5e3e3;
+    --display: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+    --body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --data: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #101315; --panel: #181c1f; --panel-2: #1f2427;
+      --ink: #e9ece9; --ink-2: #a8b1b5; --ink-3: #7b8489;
+      --rule: #2b3235; --accent: #6db4d8; --accent-soft: #17303d;
+      --live: #6cc38d; --live-soft: #16301f;
+      --wait: #d9a95c; --wait-soft: #33280f;
+      --gap: #d98080; --gap-soft: #331a1a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #101315; --panel: #181c1f; --panel-2: #1f2427;
+    --ink: #e9ece9; --ink-2: #a8b1b5; --ink-3: #7b8489;
+    --rule: #2b3235; --accent: #6db4d8; --accent-soft: #17303d;
+    --live: #6cc38d; --live-soft: #16301f;
+    --wait: #d9a95c; --wait-soft: #33280f;
+    --gap: #d98080; --gap-soft: #331a1a;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--ground); color: var(--ink);
+    font-family: var(--body); line-height: 1.55;
+    margin: 0; padding: clamp(1rem, 3vw, 2.5rem);
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 2.5rem; }
+
+  .mast { display: flex; flex-direction: column; gap: .6rem;
+          border-bottom: 2px solid var(--ink); padding-bottom: 1.1rem; }
+  .kicker { font-family: var(--data); font-size: .7rem; letter-spacing: .14em;
+            text-transform: uppercase; color: var(--accent); }
+  h1 { font-family: var(--display); font-weight: 400; font-size: clamp(1.9rem, 4.4vw, 2.9rem);
+       margin: 0; letter-spacing: -.015em; text-wrap: balance; }
+  .standfirst { color: var(--ink-2); max-width: 64ch; margin: 0; font-size: 1.02rem; }
+
+  .strip { display: grid; gap: 1px; background: var(--rule);
+           grid-template-columns: repeat(auto-fit, minmax(108px, 1fr));
+           border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; }
+  .cell { background: var(--panel); padding: .85rem .95rem; display: flex; flex-direction: column; gap: .15rem; }
+  .cell .n { font-family: var(--display); font-size: 1.85rem; line-height: 1;
+             font-variant-numeric: tabular-nums; }
+  .cell .l { font-family: var(--data); font-size: .64rem; letter-spacing: .1em;
+             text-transform: uppercase; color: var(--ink-3); }
+  .cell.hot .n { color: var(--accent); }
+  .cell.good .n { color: var(--live); }
+
+  section { display: flex; flex-direction: column; gap: 1.1rem; }
+  h2 { font-family: var(--display); font-weight: 400; font-size: 1.45rem; margin: 0;
+       display: flex; align-items: baseline; gap: .7rem; }
+  h2::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+  .note { color: var(--ink-2); margin: 0; max-width: 68ch; font-size: .95rem; }
+
+  .todo { display: flex; flex-direction: column; gap: 1px; background: var(--rule);
+          border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; }
+  .task { background: var(--panel); padding: .85rem 1rem; display: grid; gap: .15rem .9rem;
+          grid-template-columns: 2.1rem 1fr auto; align-items: baseline; }
+  .task .idx { font-family: var(--display); font-size: 1.3rem; color: var(--accent);
+               font-variant-numeric: tabular-nums; }
+  .task .what { font-weight: 600; font-size: .98rem; }
+  .task .why { grid-column: 2 / -1; font-size: .87rem; color: var(--ink-2); }
+  .task .tag { font-family: var(--data); font-size: .64rem; letter-spacing: .08em;
+               text-transform: uppercase; color: var(--ink-3); white-space: nowrap; }
+  .task .tag.now { color: var(--gap); }
+  .task .tag.easy { color: var(--live); }
+
+  .leads { display: grid; gap: .9rem; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); }
+  .lead { background: var(--panel); border: 1px solid var(--rule); border-radius: 3px;
+          border-left: 4px solid var(--live); padding: 1rem 1.1rem;
+          display: flex; flex-direction: column; gap: .6rem; }
+  .lead.hold { border-left-color: var(--ink-3); opacity: .82; }
+  .lead-top { display: flex; justify-content: space-between; align-items: flex-start; gap: .8rem; }
+  .lead h3 { margin: 0; font-size: 1.03rem; font-weight: 600; line-height: 1.3; }
+  .lead h3 .co { color: var(--ink-3); font-weight: 400; display: block; font-size: .82rem;
+                 font-family: var(--data); letter-spacing: .02em; margin-top: .2rem; }
+  .score { font-family: var(--display); font-size: 1.5rem; line-height: 1;
+           color: var(--accent); font-variant-numeric: tabular-nums; white-space: nowrap;
+           text-align: right; }
+  .score span { font-size: .62rem; color: var(--ink-3); font-family: var(--data);
+                display: block; margin-top: .2rem; }
+  .facts { display: flex; flex-wrap: wrap; gap: .35rem; }
+  .pill { font-family: var(--data); font-size: .68rem; padding: .2rem .5rem; border-radius: 2px;
+          background: var(--panel-2); color: var(--ink-2); white-space: nowrap; }
+  .pill.on { background: var(--live-soft); color: var(--live); }
+  .pill.warn { background: var(--wait-soft); color: var(--wait); }
+  .pill.bad { background: var(--gap-soft); color: var(--gap); }
+  .lead p { margin: 0; font-size: .9rem; color: var(--ink-2); }
+  .act { font-family: var(--data); font-size: .76rem; color: var(--ink);
+         border-top: 1px dashed var(--rule); padding-top: .55rem; margin-top: auto; word-break: break-word; }
+  .act b { color: var(--accent); font-weight: 600; }
+  .act a, .src { color: var(--accent); text-decoration: none;
+                 border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+  .act a:hover, .src:hover { border-bottom-color: var(--accent); }
+  .src { font-family: var(--data); font-size: .78rem; white-space: nowrap;
+         display: inline-block; margin-right: .7rem; }
+  .act .go { display: inline-block; margin-top: .3rem; }
+
+  .band { display: grid; gap: 1.4rem; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); align-items: start; }
+  .stack { display: flex; flex-direction: column; gap: .55rem; }
+  .stack h4.kicker { margin: 0 0 .1rem; }
+  .row { background: var(--panel); border: 1px solid var(--rule); border-radius: 3px;
+         padding: .7rem .85rem; display: flex; flex-direction: column; gap: .3rem; }
+  .row-h { display: flex; justify-content: space-between; align-items: baseline; gap: .6rem; }
+  .row-h strong { font-size: .95rem; font-weight: 600; }
+  .row p { margin: 0; font-size: .85rem; color: var(--ink-2); }
+  .stale { font-family: var(--data); font-size: .68rem; color: var(--wait); white-space: nowrap; }
+  .stale.hot { color: var(--gap); }
+  .stale.ok { color: var(--live); }
+
+  .split { display: grid; gap: 1px; background: var(--rule); border: 1px solid var(--rule);
+           border-radius: 3px; overflow: hidden; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); }
+  .half { background: var(--panel); padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: .6rem; }
+  .half h4 { margin: 0; font-family: var(--data); font-size: .7rem; letter-spacing: .1em;
+             text-transform: uppercase; }
+  .half.keep h4 { color: var(--live); }
+  .half.drop h4 { color: var(--gap); }
+  .half ul { margin: 0; padding-left: 1.05rem; display: flex; flex-direction: column; gap: .3rem; }
+  .half li { font-size: .88rem; color: var(--ink-2); }
+  .half li b { color: var(--ink); font-weight: 600; }
+
+  .prog { display: flex; flex-direction: column; gap: 1px; background: var(--rule);
+          border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; }
+  .pr { background: var(--panel); padding: .75rem .95rem; display: grid; gap: .35rem .9rem;
+        grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; }
+  .pr .who { font-weight: 600; font-size: .95rem; min-width: 0; }
+  .pr .who i { font-style: normal; font-family: var(--data); font-size: .72rem;
+               color: var(--ink-3); font-weight: 400; display: block; margin-top: .15rem; }
+  .pr .when { font-family: var(--data); font-size: .68rem; color: var(--ink-3); white-space: nowrap; }
+  .pr .when.hot { color: var(--gap); }
+  .pr .when.ok { color: var(--live); }
+  .rail { grid-column: 1 / -1; display: flex; gap: .25rem; margin: .1rem 0 0; }
+  .rail b { flex: 1; height: 6px; border-radius: 2px; background: var(--panel-2); font-size: 0; }
+  .rail b.done { background: var(--live); }
+  .rail b.at { background: var(--accent); }
+  .rail b.cold { background: var(--wait); }
+  .pr .next { grid-column: 1 / -1; font-size: .85rem; color: var(--ink-2); }
+  .funnel-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 4px; background: var(--panel); }
+  .funnel { width: 100%; border-collapse: collapse; font-size: .85rem; min-width: 560px; }
+  .funnel th, .funnel td { padding: .5rem .6rem; text-align: left; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+  .funnel thead th { font-family: var(--data); font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); font-weight: 400; }
+  .funnel tbody th { font-family: var(--body); text-transform: none; letter-spacing: 0; font-size: .85rem; font-weight: 600; color: var(--ink); background: var(--panel); min-width: 9rem; }
+  .funnel tr.tot th, .funnel tr.tot td { background: var(--panel-2); }
+  .funnel tbody tr:last-child th, .funnel tbody tr:last-child td { border-bottom: 0; }
+  .funnel .fn { font-family: var(--display); font-size: 1.1rem; display: block; line-height: 1.1; }
+  .funnel .fb { display: block; height: 4px; background: var(--panel-2); border-radius: 2px; margin-top: .2rem; max-width: 5rem; }
+  .funnel tr.tot .fb { background: var(--rule); }
+  .funnel .fb i { display: block; height: 100%; background: var(--live); border-radius: 2px; }
+  .funnel .cl { font-family: var(--data); color: var(--ink-3); }
+  .funnel .rt { font-family: var(--data); color: var(--accent); font-weight: 600; }
+  .legend { display: flex; flex-wrap: wrap; gap: .3rem .9rem; font-family: var(--data);
+            font-size: .64rem; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); }
+  .legend em { font-style: normal; display: inline-flex; align-items: center; gap: .3rem; }
+  .legend em::before { content: ""; width: 16px; height: 6px; border-radius: 2px; background: var(--panel-2); }
+  .legend em.done::before { background: var(--live); }
+  .legend em.at::before { background: var(--accent); }
+  .legend em.cold::before { background: var(--wait); }
+
+  .grp > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: .5rem;
+                  padding: .3rem 0; user-select: none; }
+  .grp > summary::-webkit-details-marker { display: none; }
+  .grp > summary::before { content: "\25B8"; font-size: .8rem; transition: transform .15s ease; }
+  .grp[open] > summary::before { transform: rotate(90deg); }
+  .grp > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .grp[open] > summary { margin-bottom: .55rem; }
+
+  .pick { display: flex; gap: .4rem; flex-wrap: wrap; }
+  .pick button, button.undo { font-family: var(--data); font-size: .7rem; letter-spacing: .04em; cursor: pointer;
+                 padding: .3rem .65rem; border-radius: 2px; border: 1px solid var(--live); background: var(--live-soft); color: var(--live); }
+  .pick button.no { border-color: var(--rule); background: var(--panel-2); color: var(--ink-2); }
+  button.undo { border-color: var(--rule); background: var(--panel); color: var(--accent); padding: .1rem .45rem; }
+  .pick button:hover, button.undo:hover { filter: brightness(.95); }
+  .pick button:focus-visible, button.undo:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .lead[hidden] { display: none; }
+
+  .flow { display: grid; gap: 1px; background: var(--rule); border: 1px solid var(--rule);
+          border-radius: 3px; overflow: hidden;
+          grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+  .step { background: var(--panel); padding: .9rem 1rem; display: flex; flex-direction: column; gap: .3rem; }
+  .step .sn { font-family: var(--data); font-size: .64rem; letter-spacing: .1em;
+              text-transform: uppercase; color: var(--accent); }
+  .step strong { font-size: .93rem; font-weight: 600; }
+  .step p { margin: 0; font-size: .84rem; color: var(--ink-2); }
+  .step.first { border-top: 3px solid var(--live); }
+
+  .scroll { overflow-x: auto; border: 1px solid var(--rule); border-radius: 3px; background: var(--panel); }
+  table { border-collapse: collapse; width: 100%; font-size: .86rem; min-width: 660px; }
+  th, td { text-align: left; padding: .55rem .8rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th { font-family: var(--data); font-size: .64rem; letter-spacing: .09em; text-transform: uppercase;
+       color: var(--ink-3); background: var(--panel-2); position: sticky; top: 0; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num { font-family: var(--data); font-variant-numeric: tabular-nums; color: var(--ink-3); }
+  td.sc { font-family: var(--data); font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  footer { border-top: 1px solid var(--rule); padding-top: 1rem; color: var(--ink-3);
+           font-size: .8rem; font-family: var(--data); display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; }
+  a { color: var(--accent); }
+  a:focus-visible, .lead:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (prefers-reduced-motion: no-preference) {
+    .lead, .row { transition: border-color .15s ease; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="mast">
+    <div class="kicker">Control panel &middot; updated YYYY-MM-DD</div>
+    <h1>Your job search at a glance</h1>
+    <p class="standfirst">Claude rewrites this paragraph after each session: what moved, what is waiting on whom, and the best new lead.</p>
+  </header>
+
+  <div class="strip"><!-- gen:strip -->
+    <div class="cell hot" data-k="To apply"><span class="n">1</span><span class="l">To apply</span></div>
+    <div class="cell good" data-k="Interviewing"><span class="n">0</span><span class="l">Interviewing</span></div>
+    <div class="cell good" data-k="Applied"><span class="n">0</span><span class="l">Applied</span></div>
+    <div class="cell" data-k="Rejected"><span class="n">0</span><span class="l">Rejected</span></div>
+    <div class="cell" data-k="Action"><span class="n">0</span><span class="l">Action</span></div>
+    <div class="cell" data-k="Blocked"><span class="n">0</span><span class="l">Blocked</span></div>
+    <div class="cell" data-k="Archived"><span class="n">0</span><span class="l">Archived</span></div>
+    <div class="cell" data-k="Seen in total"><span class="n">1</span><span class="l">Seen in total</span></div>
+  <!-- /gen:strip -->
+  </div>
+
+  <section>
+    <h2>How far applications get</h2>
+    <p class="note">Every application, grouped by the kind of role, counted by the <b>furthest stage it reached</b>: applied, heard back (a reply, a call or a test), interview, a later round, offer. Generated from the <code>Family</code> and <code>Stage</code> columns of <code>tracker.csv</code> on every build.</p>
+    <!-- gen:funnel -->
+    <div class="funnel-wrap"><table class="funnel">
+      <thead><tr><th scope="col">Role family</th><th scope="col">Applied</th><th scope="col">Heard back</th><th scope="col">Interview</th><th scope="col">Later round</th><th scope="col">Offer</th><th scope="col">Closed</th><th scope="col">Reached interview</th></tr></thead>
+      <tbody>
+        <tr class="tot"><th scope="row">All applications</th><td><span class="fn">0</span><span class="fb"><i style="width:0%"></i></span></td><td><span class="fn">0</span><span class="fb"><i style="width:0%"></i></span></td><td><span class="fn">0</span><span class="fb"><i style="width:0%"></i></span></td><td><span class="fn">0</span><span class="fb"><i style="width:0%"></i></span></td><td><span class="fn">0</span><span class="fb"><i style="width:0%"></i></span></td><td class="cl">0</td><td class="rt">0%</td></tr>
+      </tbody>
+    </table></div>
+    <!-- /gen:funnel -->
+  </section>
+
+  <section>
+    <h2>Where every open application stands</h2>
+    <p class="note">The rail runs <span class="pill">sent &rarr; heard back &rarr; interview &rarr; later round &rarr; offer</span>. Hand-written: Claude keeps it current.</p>
+    <div class="legend">
+      <em class="done">cleared</em><em class="at">where it stands now</em><em class="cold">stalled or overdue</em><em>not reached</em>
+    </div>
+
+    <details class="grp" open>
+      <summary class="kicker">In conversation</summary>
+    <div class="prog">
+
+      <div class="pr">
+        <span class="who">Example role <i>Example company &middot; #1 &middot; first interview</i></span>
+        <span class="when hot">waiting since YYYY-MM-DD</span>
+        <span class="rail"><b class="done"></b><b class="done"></b><b class="at"></b><b></b><b></b></span>
+        <span class="next">What happened last and what the next step is.</span>
+      </div>
+
+    </div>
+    </details>
+  </section>
+
+  <section>
+    <h2>Do these things</h2>
+    <div class="todo">
+
+      <div class="task">
+        <span class="idx">1</span>
+        <span class="what">Fill in profile/profile.md and your CV</span>
+        <span class="tag now">first</span>
+        <span class="why">Everything else (scoring, CVs, letters) builds on it.</span>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>Work from the top: the next best choices</h2>
+    <p class="note"><b>These cards are generated from the tracker</b>: the best live TO APPLY rows by score. Apply to one and the next row moves up on the next rebuild.</p>
+    <div class="leads"><!-- gen:top10 -->
+      <article class="lead" data-row="1">
+        <div class="lead-top">
+          <h3>Example Role (delete this row)<span class="co">Example Company &middot; #1 &middot; Brussels</span></h3>
+          <div class="score">8<span>3+2+2+1+1 =9−1</span></div>
+        </div>
+        <p>Shows how a row looks: delete it once you have real leads.</p>
+        <div class="act"><b>Apply with the base CV</b></div>
+        <div class="pick" hidden><button type="button" data-act="applied">Applied</button><button type="button" class="no" data-act="not_interested">Not interested</button></div>
+      </article>
+    <!-- /gen:top10 -->
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,11 @@
+# Local working files
+backups/
+.playwright-mcp/
+__pycache__/
+*.pyc
+.env
+.claude/settings.local.json
+
+# Office lock files
+~$*
+.~lock.*
